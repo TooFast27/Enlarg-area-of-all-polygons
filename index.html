@@ -1,0 +1,98 @@
+
+<html>
+<head>
+<title>Increase area of all polygons</title>
+
+<link rel="stylesheet" href="http://openlayers.org/en/v3.10.1/css/ol.css" type="text/css">
+<script src="http://openlayers.org/en/v3.10.1/build/ol.js"></script>
+<link rel="stylesheet" href="jquery-ui-1.11.4.custom/jquery-ui.css">
+  <script src="jquery-1.11.3.js"></script>
+  <script src="jquery-ui-1.11.4.custom/jquery-ui.js"></script>
+</head>
+<body>
+<div class="container-fluid">
+
+<div class="row-fluid">
+  <div class="span12">
+    <div id="map" class="map" style="width:50%; height:50%;"></div>
+	
+  </div>
+ </div>
+  <input type="text" id="new_area" name="fname">
+   <button onClick="myf()">SET NEW AREA</button>
+</div>
+
+<script>
+document.getElementById("new_area").value=100;
+var ring = [ [0, 0], [1, 0],
+             [1, 1],[0,1] ];
+var raster = new ol.layer.Tile({source: new ol.source.MapQuest({layer: 'sat'})});
+var lineFeature = new ol.Feature(
+    new ol.geom.Polygon([ring]));
+var vector= new ol.layer.Vector({
+      source: new ol.source.Vector({
+        features: [lineFeature]
+      }),
+      style: new ol.style.Style({
+		image: new ol.style.Icon(/** @type {olx.style.IconOptions} */ ({
+          anchor: [0.5, 46],
+          anchorXUnits: 'fraction',
+          anchorYUnits: 'pixels',
+          opacity: 0.95,
+        })),
+        stroke: new ol.style.Stroke({
+          width: 3,
+          color: [255, 0, 0, 1]
+        }),
+        fill: new ol.style.Fill({
+          color: [0, 255, 0, 0.6]
+        })
+      })
+    })
+
+var map = new ol.Map({
+  layers: [raster,vector],
+  target: 'map',
+  view: new ol.View({
+    center: [0, 0],
+    zoom: 2
+  })
+});
+function myf(){
+if (document.getElementById("new_area").value<0){
+alert("THE VALUE OF AREA MUST BE POSITIVE");
+}else{
+modify_area(lineFeature);
+}}
+function modify_area(lineFeature){
+var coefficient=document.getElementById("new_area").value/lineFeature.getGeometry().getArea();
+coefficient= Math.sqrt(coefficient);
+console.log("before "+lineFeature.getGeometry().getArea());
+var cord_current=lineFeature.getGeometry().getCoordinates();
+var number_point=cord_current[0].length;
+var i=0;
+var cordinates=new Array(number_point);
+for (i=0;i<number_point;i++){
+cordinates[i]=new Array(2);
+}
+var index=0;
+var x_o_y=0;
+cordinates[0][0]=cord_current[0][0][0];
+cordinates[0][1]=cord_current[0][0][1];
+for (index=1;index<number_point;index++){
+for (x_o_y=0;x_o_y<2;x_o_y++){
+cordinates[index][x_o_y]=(cord_current[0][index][x_o_y]-cord_current[0][index-1][x_o_y])*coefficient+cordinates[index-1][x_o_y];
+
+}
+}
+lineFeature.getGeometry().setCoordinates([cordinates])
+console.log("after "+lineFeature.getGeometry().getArea());
+}
+var extent=lineFeature.getGeometry().getExtent();
+map.getView().fit(extent, map.getSize());
+//map.getView().fitExtent(extent, map.getSize());
+//map.fitExtent(exent, map.getSize())
+ //map.fitExtent(lineFeature.getGeometry().getExtent(), map.getSize());
+</script>
+</body>
+</html>
